@@ -12,7 +12,6 @@ start_time = time.time()
 load_dotenv()
 
 bot = Andromeda(os.getenv("AUTH_TOKEN"), start_time=start_time)
-buttons = Buttons(bot.token)
 
 @bot.event
 async def on_ready(data):
@@ -21,32 +20,20 @@ async def on_ready(data):
 
 @bot.event
 async def on_message_create(message):
-    whitelisted = [
-        "enter-giveaway",
-        "test"
-    ]
+    content = message["content"]
+    print(f"Message received: {content}")
     
-    components = message["components"]
-    custom_id = None
-    if components:
-        nested_components = components[0]["components"]
-        if nested_components:
-            custom_id = nested_components[0]["custom_id"]
+    prefix = "!"
+    if content.startswith(prefix):
+        parts = content[len(prefix):].split()
+        command_name = parts[0]
+        args = parts[1:]
+        print(f"Command: {command_name}, Args: {args}")
+        await bot._handle_message(command_name, *args)
 
-    if custom_id and custom_id in whitelisted:
-        print(f"{Fore.GREEN}{custom_id} found in whitelist!, Interacting...{Style.RESET_ALL}")
-        
-        guild_id = message["guild_id"]
-        channel_id = message["channel_id"]
-        message_id = message["id"]
-        author_id = message['author']['id']
-        
-        if guild_id and channel_id and message_id:
-            buttons._interact(guild_id, channel_id, message_id, author_id, str(custom_id))
-        else:
-            print(f"{Fore.RED}Missing guild_id, channel_id, or message_id. Cannot interact.{Style.RESET_ALL}")
-    else:
-        pass
+@bot.command
+async def greet(username):
+    print(f"Hello, {username}! Welcome to the server.")
 
 
 

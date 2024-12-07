@@ -10,16 +10,18 @@ from colorama import Fore, Style
 from .utils import Utils
 from .handlers import Handlers
 
-GATEWAY_URL = "wss://gateway.discord.gg/?v=10&encoding=json"
-intents = 53608447
-
 class Andromeda:
     def __init__(self, token, start_time):
         self.token = token
+        self.intents = 53608447
+        self.GATEWAY_URL = "wss://gateway.discord.gg/?v=10&encoding=json"
+
         self.start_time = start_time
         self.ws = None
         self.heartbeat_interval = None
+
         self.event_handlers = {}
+        self.command_handlers = {}
         self._initialize_user_data()
 
     def _initialize_user_data(self):
@@ -31,16 +33,20 @@ class Andromeda:
         else:
             raise RuntimeError(f"Failed to fetch user info: {response.status_code} {response.text}")
 
+    def command(self, func):
+        self.command_handlers[func.__name__] = func
+        return func
+
     def event(self, coro):
         self.event_handlers[coro.__name__] = coro
         return coro
 
     def start(self, debug=True):
         if debug:
-            print(f"{Fore.BLUE}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]{Style.RESET_ALL} Starting client : {GATEWAY_URL}")
+            print(f"{Fore.BLUE}[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]{Style.RESET_ALL} Starting client : {self.GATEWAY_URL}")
 
         self.ws = websocket.WebSocketApp(
-            GATEWAY_URL,
+            self.GATEWAY_URL,
             on_message=self._on_message,
             on_close=self.on_close,
         )
@@ -59,7 +65,7 @@ class Andromeda:
             "op": 2,
             "d": {
                 "token": self.token,
-                "intents": intents,
+                "intents": self.intents,
                 "properties": {
                     "os": "linux",
                     "browser": "selfbot",
@@ -86,7 +92,7 @@ class Andromeda:
                 threading.Thread(target=self.heartbeat).start()
                 self.identify()
             else:
-                asyncio.run(self._handle_event(f"on_{data['t'].lower()}", data.get("d")))
+                asyncio.run(self._handle_message(f"on_{data['t'].lower()}", data.get("d")))
         except Exception as e:
             pass
 
@@ -95,9 +101,11 @@ class Andromeda:
         print("Disconnected from Discord. Attempting to reconnect...")
         self.start()
 
-    async def _handle_event(self, event_name, data):
-        if event_name in self.event_handlers:
-            await self.event_handlers[event_name](data)
+    async def _handle_message(self, name, *args):
+        if name in self.event_handlers:
+            await self.event_handlers[name](*args)
+        elif name in self.command_handlers:
+            await self.command_handlers[name](*args)
         else:
             pass
 
