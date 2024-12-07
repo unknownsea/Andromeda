@@ -32,8 +32,9 @@ async def on_message_create(message):
         await bot._handle_message(command_name, *args)
 
 @bot.command
-async def greet(username):
-    print(f"Hello, {username}! Welcome to the server.")
+async def help(type:str):
+    if help:
+        print(f"Argument {type} accepted.")
 
 
 
