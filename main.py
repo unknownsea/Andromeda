@@ -32,9 +32,8 @@ async def on_message_create(message):
         await bot._handle_message(command_name, *args)
 
 @bot.command
-async def help(type:str):
-    if help:
-        print(f"Argument {type} accepted.")
+async def help(type : str = None):
+    print("oi oi oi")
 
 
 
