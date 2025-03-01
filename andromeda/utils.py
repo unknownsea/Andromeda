@@ -10,7 +10,7 @@ class Utils:
         }
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code != 200:
-            print(f"POST failed: {response.status_code} {response.text}")
+            print(f"POST : {response.status_code} {response.text}")
         return response
 
     def _get(url, token):
@@ -21,7 +21,7 @@ class Utils:
         }
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
-            print(f"GET failed: {response.status_code} {response.text}")
+            print(f"GET : {response.status_code} {response.text}")
         return response
     
     def _generate_digits(amount=int):
