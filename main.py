@@ -31,6 +31,14 @@ async def on_message_create(message):
         print(f"Command: {command_name}, Args: {args}")
         await bot._handle_message(command_name, *args)
 
+@bot.event
+async def on_message_delete(message):
+    cached_message = bot.message_cache.pop(message["id"], None)
+    if cached_message:
+        print(f'Message deleted: {cached_message}')
+    else:
+        print(f'Message deleted with ID: {message["id"]}')
+
 @bot.command
 async def help(type : str = None):
     print("oi oi oi")

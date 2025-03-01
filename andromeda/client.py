@@ -19,6 +19,7 @@ class Andromeda:
         self.start_time = start_time
         self.ws = None
         self.heartbeat_interval = None
+        self.message_cache = {}
 
         self.event_handlers = {}
         self.command_handlers = {}
@@ -92,7 +93,15 @@ class Andromeda:
                 threading.Thread(target=self.heartbeat).start()
                 self.identify()
             else:
-                asyncio.run(self._handle_message(f"on_{data['t'].lower()}", data.get("d")))
+                try:
+                    if "id" in data["d"] and "content" in data["d"]:
+                        if len(self.message_cache) > 10000:
+                            oldest_message_id = next(iter(self.message_cache))
+                            del self.message_cache[oldest_message_id]
+                        self.message_cache[data["d"]["id"]] = data["d"]["content"]
+                except Exception as e:
+                    pass
+                asyncio.run(self._handle_message(f"on_{data['t'].lower()}", data["d"]))
         except Exception as e:
             pass
 
